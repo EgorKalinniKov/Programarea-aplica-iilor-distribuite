@@ -6,7 +6,6 @@ namespace ApiGateway.Controllers;
 [Route("api")]
 public class HealthController : ControllerBase
 {
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<HealthController> _logger;
 
     public HealthController(ILogger<HealthController> logger)
