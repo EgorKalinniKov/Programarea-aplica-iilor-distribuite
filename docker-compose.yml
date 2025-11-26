@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+  # PostgreSQL для Expense Service
+  postgres-expenses:
+    image: postgres:15-alpine
+    container_name: postgres-expenses
+    environment:
+      POSTGRES_DB: expenses_db
+      POSTGRES_USER: expense_user
+      POSTGRES_PASSWORD: expense_pass
+    volumes:
+      - expenses-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U expense_user -d expenses_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - expense-network
+
+  # PostgreSQL для Category Service
+  postgres-categories:
+    image: postgres:15-alpine
+    container_name: postgres-categories
+    environment:
+      POSTGRES_DB: categories_db
+      POSTGRES_USER: category_user
+      POSTGRES_PASSWORD: category_pass
+    volumes:
+      - categories-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U category_user -d categories_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - expense-network
+
+  # API Gateway (.NET)
+  api-gateway:
+    build:
+      context: ./src/ApiGateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - expense-service
+      - category-service
+      - statistics-service
+      - import-export-service
+    restart: unless-stopped
+    networks:
+      - expense-network
+
+  # Expense Service (.NET)
+  expense-service:
+    build:
+      context: ./src/ExpenseService
+      dockerfile: Dockerfile
+    container_name: expense-service
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres-expenses:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - expense-network
+
+  # Category Service (.NET)
+  category-service:
+    build:
+      context: ./src/CategoryService
+      dockerfile: Dockerfile
+    container_name: category-service
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres-categories:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - expense-network
+
+  # Statistics Service (.NET)
+  statistics-service:
+    build:
+      context: ./src/StatisticsService
+      dockerfile: Dockerfile
+    container_name: statistics-service
+    ports:
+      - "8003:8003"
+    depends_on:
+      - expense-service
+    restart: unless-stopped
+    networks:
+      - expense-network
+
+  # Import/Export Service (.NET)
+  import-export-service:
+    build:
+      context: ./src/ImportExportService
+      dockerfile: Dockerfile
+    container_name: import-export-service
+    ports:
+      - "8004:8004"
+    depends_on:
+      - expense-service
+      - category-service
+    restart: unless-stopped
+    networks:
+      - expense-network
+
+  # Web App (ASP.NET Core Razor Pages)
+  webapp:
+    build:
+      context: ./src/WebApp
+      dockerfile: Dockerfile
+    container_name: webapp
+    ports:
+      - "5000:80"
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+    networks:
+      - expense-network
+
+volumes:
+  expenses-data:
+  categories-data:
+
+networks:
+  expense-network:
+    driver: bridge
+
