@@ -161,7 +161,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="addExpenseForm">
+                <form id="addExpenseForm" onsubmit="return false;">
                     <div class="mb-3">
                         <label for="expenseCategory" class="form-label">Категория</label>
                         <select class="form-select" id="expenseCategory" required>
@@ -199,7 +199,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="addCategoryForm">
+                <form id="addCategoryForm" onsubmit="return false;">
                     <div class="mb-3">
                         <label for="categoryName" class="form-label">Название категории</label>
                         <input type="text" class="form-control" id="categoryName" required>

@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:8000/api'
+    : 'http://api-gateway:8000/api';
 
 // Загрузка расходов
 async function loadExpenses() {
@@ -38,7 +40,10 @@ async function loadExpenses() {
 }
 
 // Добавление расхода
-async function addExpense() {
+async function addExpense(event) {
+    if (event) {
+        event.preventDefault();
+    }
     const category = document.getElementById('expenseCategory').value;
     const amount = parseFloat(document.getElementById('expenseAmount').value);
     const date = document.getElementById('expenseDate').value;
@@ -140,7 +145,10 @@ async function loadCategories() {
 }
 
 // Добавление категории
-async function addCategory() {
+async function addCategory(event) {
+    if (event) {
+        event.preventDefault();
+    }
     const name = document.getElementById('categoryName').value.trim();
     
     if (!name) {
@@ -334,6 +342,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('expenseDate').valueAsDate = new Date();
 
     // Загрузка статистики при переключении на вкладку
-    document.getElementById('statistics-tab').addEventListener('click', loadStatistics);
+        document.getElementById('statistics-tab').addEventListener('click', loadStatistics);
+
+        // Обрабатываем отправку форм, чтобы не было перезагрузки
+        document.getElementById('addExpenseForm').addEventListener('submit', addExpense);
+        document.getElementById('addCategoryForm').addEventListener('submit', addCategory);
 });
 
